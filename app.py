@@ -34,6 +34,12 @@ class Business(db.Model):
     category = db.Column(db.String(80), nullable=False)
     address  = db.Column(db.String(200), nullable=False)
     phone    = db.Column(db.String(20))
+
+    owner_id = db.Column(
+        db.Integer,
+        db.ForeignKey("user.id"),
+        nullable=False
+    )
     reviews  = db.relationship("Review", backref="business", lazy=True)
 
     @property
@@ -945,6 +951,7 @@ def logout():
 @app.route("/business/<int:id>")
 def business(id):
     b = Business.query.get_or_404(id)
+
     icon = ICONS.get(b.category, "🏢")
     bg, col = CAT_COLORS.get(b.category, ("#f3f4f6","#6b7280"))
 
@@ -993,7 +1000,33 @@ def business(id):
         """
     else:
         review_form = f'<div class="alert-info">Review թողնելու համար <a href="/login">մուտք գործեք</a></div>'
+        
+    owner_buttons = ""
 
+    if (
+        "user_id" in session and
+        session["user_id"] == b.owner_id
+    ):
+        owner_buttons = f"""
+        <div style="margin-top:15px;display:flex;gap:10px;">
+        <a href="/edit_business/{b.id}"
+           class="btn-submit"
+           style="width:auto;text-decoration:none;">
+           ✏️ Խմբագրել
+        </a>
+
+        <form action="/delete_business/{b.id}"
+              method="POST"
+              onsubmit="return confirm('Վստա՞հ եք')">
+            <button type="submit"
+                    style="background:#dc2626;color:white;
+                           border:none;padding:12px 18px;
+                           border-radius:10px;cursor:pointer;">
+                🗑️ Ջնջել
+            </button>
+        </form>
+    </div>
+    """
     content = f"""
 <div class="container">
     <a href="/" class="btn-back">← Հետ</a>
@@ -1005,6 +1038,7 @@ def business(id):
             <div class="detail-info">📍 {b.address}</div>
             <div class="detail-info">📞 {b.phone or "—"}</div>
             <div class="detail-rating">{rating_html}</div>
+            {owner_buttons}
         </div>
     </div>
 
@@ -1044,6 +1078,7 @@ def add_business():
             category=request.form["category"],
             address=request.form["address"],
             phone=request.form.get("phone", "")
+            owner_id=session["user_id"]
         )
         db.session.add(b)
         db.session.commit()
@@ -1086,6 +1121,77 @@ def add_business():
 </div>
 """
     return base("Ավելացնել բիզնես", content)
+    
+@app.route("/edit_business/<int:id>", methods=["GET", "POST"])
+def edit_business(id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    b = Business.query.get_or_404(id)
+
+    if b.owner_id != session["user_id"]:
+        return redirect(url_for("home"))
+
+    if request.method == "POST":
+        b.name = request.form["name"]
+        b.category = request.form["category"]
+        b.address = request.form["address"]
+        b.phone = request.form["phone"]
+
+        db.session.commit()
+        return redirect(url_for("business", id=b.id))
+
+    content = f"""
+    <div class="auth-wrap" style="max-width:520px;">
+        <div class="auth-card">
+            <div class="auth-title">Խմբագրել բիզնեսը</div>
+
+            <form method="POST">
+                <div class="form-group">
+                    <label class="form-label">Անուն</label>
+                    <input name="name" class="form-input" value="{b.name}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Կատեգորիա</label>
+                    <input name="category" class="form-input" value="{b.category}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Հասցե</label>
+                    <input name="address" class="form-input" value="{b.address}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Հեռախոս</label>
+                    <input name="phone" class="form-input" value="{b.phone or ''}">
+                </div>
+
+                <button type="submit" class="btn-submit">
+                    Պահպանել
+                </button>
+            </form>
+        </div>
+    </div>
+    """
+
+    return base("Խմբագրել", content)
+
+
+@app.route("/delete_business/<int:id>", methods=["POST"])
+def delete_business(id):
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    b = Business.query.get_or_404(id)
+
+    if b.owner_id != session["user_id"]:
+        return redirect(url_for("home"))
+
+    db.session.delete(b)
+    db.session.commit()
+
+    return redirect(url_for("home"))
 
 
 # ── Init & run ────────────────────────────────────────────────────────
