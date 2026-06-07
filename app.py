@@ -1077,7 +1077,7 @@ def add_business():
             name=request.form["name"],
             category=request.form["category"],
             address=request.form["address"],
-            phone=request.form.get("phone", "")
+            phone=request.form.get("phone", ""),
             owner_id=session["user_id"]
         )
         db.session.add(b)
@@ -1121,7 +1121,7 @@ def add_business():
 </div>
 """
     return base("Ավելացնել բիզնես", content)
-    
+
 @app.route("/edit_business/<int:id>", methods=["GET", "POST"])
 def edit_business(id):
     if "user_id" not in session:
