@@ -9,6 +9,18 @@ app.secret_key = "secret123"
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///businesses.db")
 db = SQLAlchemy(app)
 
+from flask_dance.contrib.google import make_google_blueprint, google
+
+google_bp = make_google_blueprint(
+    client_id=os.environ.get("GOOGLE_CLIENT_ID"),
+    client_secret=os.environ.get("GOOGLE_CLIENT_SECRET"),
+    redirect_to="google_login",
+    scope=["openid", "https://www.googleapis.com/auth/userinfo.email",
+           "https://www.googleapis.com/auth/userinfo.profile"]
+)
+app.register_blueprint(google_bp, url_prefix="/login")
+
+
 # ── Models ────────────────────────────────────────────────────────────
 class User(db.Model):
     id       = db.Column(db.Integer, primary_key=True)
@@ -350,6 +362,7 @@ def register():
                 </form>
                 <p class="text-center text-muted small mt-3">
                     Արդեն հաշիվ ունե՞ք — <a href="/login" style="color:#4361ee">Մուտք</a>
+
                 </p>
             </div>
         </div>
@@ -395,6 +408,11 @@ def login():
                         <button type="submit" class="btn btn-primary">Մուտք գործել</button>
                     </div>
                 </form>
+                <div class="text-center mt-3">
+                    <a href="/login/google" class="btn btn-outline-danger w-100">
+                        Google-ով մուտք գործել
+                    </a>
+                </div>
                 <p class="text-center text-muted small mt-3">
                     Հաշիվ չունե՞ք — <a href="/register" style="color:#4361ee">Գրանցվել</a>
                 </p>
