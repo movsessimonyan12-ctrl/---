@@ -421,7 +421,23 @@ def login():
     </div>
     """
     return base("Մուտք", content)
-
+    
+@app.route("/google_login")
+def google_login():
+    if not google.authorized:
+        return redirect(url_for("google.login"))
+    resp = google.get("/oauth2/v2/userinfo")
+    info = resp.json()
+    email = info["email"]
+    name  = info.get("name", email.split("@")[0])
+    user = User.query.filter_by(username=email).first()
+    if not user:
+        user = User(username=email, password=hash_password(os.urandom(16).hex()))
+        db.session.add(user)
+        db.session.commit()
+    session["user_id"] = user.id
+    session["username"] = name
+    return redirect(url_for("home"))
 # ── Logout ────────────────────────────────────────────────────────────
 @app.route("/logout")
 def logout():
