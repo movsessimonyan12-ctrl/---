@@ -268,7 +268,7 @@ def home():
     content = f"""
     <div class="hero">
         <h1>🏙️ Հայ Բիզնես</h1>
-        <p>Գտի լավագույն բիզնեսները Հայաստանում, կարդա reviews, թողիր կարծիք</p>
+        <p>Գտիր լավագույն բիզնեսները Հայաստանում, կարդա reviews, թողիր կարծիք</p>
         {add_btn}
     </div>
     <div class="search-bar">
@@ -333,7 +333,7 @@ def register():
                 <form method="POST">
                     <div class="mb-3">
                         <label class="form-label fw-500">Օգտանուն</label>
-                        <input name="username" class="form-control" placeholder="mername" required>
+                        <input name="username" class="form-control" placeholder="username" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-500">Գաղտնաբառ</label>
