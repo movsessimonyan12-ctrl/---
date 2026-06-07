@@ -2,10 +2,11 @@ from flask import Flask, render_template_string, request, redirect, url_for, ses
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import hashlib
+import os
 
 app = Flask(__name__)
 app.secret_key = "secret123"
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///businesses.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///businesses.db")
 db = SQLAlchemy(app)
 
 # ── Models ────────────────────────────────────────────────────────────
